@@ -2,7 +2,11 @@ import os
 import time
 import re
 from slackclient import SlackClient
+from subprocess import check_output
+import Adafruit_DHT
+import pyowm
 
+owm = pyowm.OWM('openweathermapskeyhere')
 
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
@@ -11,8 +15,13 @@ starterbot_id = None
 
 # constants
 RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
-EXAMPLE_COMMAND = "do"
+EXAMPLE_COMMAND = "who is your master?"
+AC_ON = "ac on"
+AC_OFF = "ac off"
+TEMP = "temp"
+WEATHER = "weather"
 MENTION_REGEX = "^<@(|[WU].+?)>(.*)"
+observation = owm.weather_at_coords(41.683983, -70.081409)
 
 def parse_bot_commands(slack_events):
     """
@@ -40,14 +49,39 @@ def handle_command(command, channel):
     """
         Executes bot command if the command is known
     """
+    observation = owm.weather_at_coords(41.683983, -70.081409)
+    w = observation.get_weather()
     # Default response is help text for the user
-    default_response = "Not sure what you mean. Try *{}*.".format(EXAMPLE_COMMAND)
-
+    default_response = "Not sure what you mean. Try *{}*, *{}*, *{}*, *{}*.".format(AC_ON, AC_OFF, TEMP, WEATHER)
+    temperature = "no reading"
+    humidity = "no reading"
     # Finds and executes the given command, filling in response
     response = None
     # This is where you start to implement more commands!
     if command.startswith(EXAMPLE_COMMAND):
-        response = "Sure...write some more code then I can do that!"
+        response = "Matt Desmarais aka matt8588 is my creator and master"
+    if command.startswith(TEMP):
+        #get dht temp/humidity
+        humidity, temperature = Adafruit_DHT.read_retry(11, 4)
+        #return temp and humidity in response 
+        response = str(9.0/5.0 * temperature + 32)+"F "+str(humidity)+"%"
+    if command.startswith(WEATHER):
+        #get openweathermaps temp/humidity data
+        response = "Outdoor temp/humidity: "+str(w.get_temperature('fahrenheit')["temp"])+"F/"+str(w.get_humidity())+"%"
+    if command.startswith(AC_ON):
+        #get dht temp/humidity
+        humidity, temperature = Adafruit_DHT.read_retry(11, 4)
+        #return ac on with current temp/humidity
+        response = "AC on and set to max! \n"+str(9.0/5.0 * temperature + 32)+"F "+str(humidity)+"%"
+        #send air conditioner on at max cool settings
+        os.system("sudo irsend SEND_ONCE aircond POWER2")
+    if command.startswith(AC_OFF):
+        #get dht temp/humidity
+        humidity, temperature = Adafruit_DHT.read_retry(11, 4)
+        #return temp and humidity in response 
+        response = "AC off! \n"+str(9.0/5.0 * temperature + 32)+"F "+str(humidity)+"%"
+        #send air conditioner off code
+        os.system("sudo irsend SEND_ONCE aircond OFF")
 
     # Sends the response back to the channel
     slack_client.api_call(
