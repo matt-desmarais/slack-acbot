@@ -4,8 +4,13 @@ A simple Python-powered starter Slack bot. Read
 for a full overview.
 
 Air conditioner tutorial comings soon...
+
 Commands are:
+
   ac on   turn ac on
+  
   ac off  turn ac off
+  
   temp    get temp/humidity
+  
   weather get outdoor temp/humidity
