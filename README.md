@@ -7,10 +7,10 @@ Air conditioner tutorial comings soon...
 
 Commands are:
 
-  ac on   turn ac on
+  ac on:   turn ac on
   
-  ac off  turn ac off
+  ac off:  turn ac off
   
-  temp    get temp/humidity
+  temp:    get temp/humidity
   
-  weather get outdoor temp/humidity
+  weather: get outdoor temp/humidity
